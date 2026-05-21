@@ -1,17 +1,16 @@
-/** Public-domain / CC-friendly planetary texture URLs for the intro sequence */
+/**
+ * Local planetary textures (Solar System Scope, CC BY 4.0).
+ * Served from /public/textures/planets — avoids fragile remote CDN URLs.
+ * @see https://www.solarsystemscope.com/textures/
+ */
+const base = "/textures/planets";
+
 export const PLANET_TEXTURES = {
-  earth:
-    "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg",
-  earthNight:
-    "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg",
-  moon: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg",
-  mars: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/mars_1k_color.jpg",
-  jupiter:
-    "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/jupiter_2k.jpg",
-  saturn:
-    "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/saturn_2k.jpg",
-  uranus:
-    "https://www.solarsystemscope.com/textures/download/2k_uranus.jpg",
-  neptune:
-    "https://www.solarsystemscope.com/textures/download/2k_neptune.jpg",
+  earth: `${base}/earth.jpg`,
+  moon: `${base}/moon.jpg`,
+  mars: `${base}/mars.jpg`,
+  jupiter: `${base}/jupiter.jpg`,
+  saturn: `${base}/saturn.jpg`,
+  uranus: `${base}/uranus.jpg`,
+  neptune: `${base}/neptune.jpg`,
 } as const;

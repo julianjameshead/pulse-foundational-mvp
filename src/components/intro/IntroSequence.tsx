@@ -1,117 +1,109 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useTexture } from "@react-three/drei";
+import { Great_Vibes } from "next/font/google";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePulseAudio } from "@/hooks/usePulseAudio";
-import { IntroScene, type IntroStage } from "./IntroScene";
+import {
+  getFadeOpacity,
+  getIntroOverlays,
+  INTRO_DURATION_MS,
+  introTime,
+} from "@/lib/introCinematic";
+import { PLANET_TEXTURES } from "@/lib/planetTextures";
+import { IntroScene } from "./IntroScene";
 
-const STAGES: { id: IntroStage; duration: number; label: string }[] = [
-  { id: "pulse", duration: 5200, label: "Sensing pulse" },
-  { id: "pullback", duration: 15000, label: "Expanding outward" },
-  { id: "deep", duration: 6000, label: "Deep space" },
-  { id: "rush", duration: 3200, label: "Returning" },
-  { id: "arrive", duration: 1800, label: "Arriving" },
-];
+const greatVibes = Great_Vibes({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 interface IntroSequenceProps {
   onComplete: () => void;
 }
 
 export function IntroSequence({ onComplete }: IntroSequenceProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const [stageProgress, setStageProgress] = useState(0);
+  const [progress, setProgress] = useState(0);
   const { playHeartbeat, stop } = usePulseAudio();
+  const startedAudio = useRef(false);
 
-  const stage = STAGES[stageIndex];
-  const globalProgress =
-    (stageIndex + stageProgress) / STAGES.length;
+  const elapsed = introTime(progress);
+  const { pulseOpacity } = getIntroOverlays(elapsed);
+  const fadeOpacity = getFadeOpacity(elapsed);
+  const textBreath = 0.9 + Math.sin(elapsed * 1.2) * 0.1;
 
-  const advance = useCallback(() => {
-    if (stageIndex >= STAGES.length - 1) {
-      stop();
-      onComplete();
-      return;
-    }
-    setStageIndex((i) => i + 1);
-    setStageProgress(0);
-  }, [stageIndex, onComplete, stop]);
+  useEffect(() => {
+    Object.values(PLANET_TEXTURES).forEach((url) => useTexture.preload(url));
+  }, []);
 
-  const skip = useCallback(() => {
+  const finish = useCallback(() => {
     stop();
     onComplete();
   }, [onComplete, stop]);
 
+  const skip = useCallback(() => finish(), [finish]);
+
   useEffect(() => {
-    if (stageIndex === 0 && stageProgress < 0.05) {
+    if (!startedAudio.current) {
+      startedAudio.current = true;
       playHeartbeat();
+      const t = setTimeout(stop, 900);
+      return () => clearTimeout(t);
     }
-    if (stageIndex > 0) stop();
-  }, [stageIndex, stageProgress, playHeartbeat, stop]);
+  }, [playHeartbeat, stop]);
 
   useEffect(() => {
     const start = performance.now();
     let frame: number;
 
     const tick = (now: number) => {
-      const elapsed = now - start;
-      const p = Math.min(1, elapsed / stage.duration);
-      setStageProgress(p);
-      if (p >= 1) advance();
+      const p = Math.min(1, (now - start) / INTRO_DURATION_MS);
+      setProgress(p);
+      if (p >= 1) finish();
       else frame = requestAnimationFrame(tick);
     };
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [stageIndex, stage.duration, advance]);
+  }, [finish]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <div className="intro-root fixed inset-0 z-50 bg-black">
       <Canvas
-        camera={{ fov: 45, near: 0.1, far: 2000, position: [0, 0, 4] }}
+        camera={{ fov: 38, near: 0.05, far: 500, position: [0, 0.3, 3.2] }}
         gl={{ antialias: true, alpha: false }}
         dpr={[1, 2]}
       >
-        <color attach="background" args={["#020208"]} />
-        <fog attach="fog" args={["#020208", 80, 450]} />
         <Suspense fallback={null}>
-          <IntroScene
-            stage={stage.id}
-            stageProgress={stageProgress}
-            globalProgress={globalProgress}
-          />
+          <IntroScene progress={progress} />
         </Suspense>
       </Canvas>
 
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_100%)]" />
+      {/* Opening fade — pulse.html #fade */}
+      <div
+        className="intro-fade pointer-events-none fixed inset-0 z-20 bg-black"
+        style={{ opacity: fadeOpacity }}
+      />
 
-      <AnimatePresence>
-        {stage.id === "pulse" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.15, 0.35, 0.15] }}
-            transition={{ duration: 0.82, repeat: Infinity }}
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(120,180,255,0.2),transparent_55%)]"
-          />
-        )}
-      </AnimatePresence>
+      {/* Vignette — pulse.html #vig */}
+      <div className="intro-vig pointer-events-none fixed inset-0 z-10" />
 
-      <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-3 px-6">
-        <p className="text-center text-[11px] font-medium uppercase tracking-[0.35em] text-white/50">
-          {stage.label}
-        </p>
-        <div className="h-[2px] w-48 overflow-hidden rounded-full bg-white/10">
-          <motion.div
-            className="h-full bg-gradient-to-r from-cyan-400/80 to-violet-400/80"
-            style={{ width: `${globalProgress * 100}%` }}
-          />
-        </div>
+      {/* Glowing cursive Pulse — pulse.html text reveal */}
+      <div
+        className="intro-pulse-text pointer-events-none fixed inset-0 z-[15] flex items-center justify-center"
+        style={{
+          opacity: pulseOpacity * textBreath,
+        }}
+      >
+        <span className={greatVibes.className}>Pulse</span>
       </div>
 
       <button
         type="button"
         onClick={skip}
-        className="absolute right-5 top-5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-white/60 backdrop-blur-md transition hover:bg-white/10 hover:text-white/90"
+        className="absolute right-5 top-5 z-30 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-white/60 backdrop-blur-md transition hover:bg-white/10 hover:text-white/90"
       >
         Skip
       </button>
