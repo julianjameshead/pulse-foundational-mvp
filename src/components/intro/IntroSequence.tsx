@@ -1,6 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { useTexture } from "@react-three/drei";
 import { Great_Vibes } from "next/font/google";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -38,6 +39,12 @@ export function IntroSequence({ onComplete }: IntroSequenceProps) {
     Object.values(PLANET_TEXTURES).forEach((url) => useTexture.preload(url));
   }, []);
 
+  const onCanvasCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.toneMappingExposure = 1.35;
+    gl.outputColorSpace = THREE.SRGBColorSpace;
+  }, []);
+
   const finish = useCallback(() => {
     stop();
     onComplete();
@@ -72,8 +79,20 @@ export function IntroSequence({ onComplete }: IntroSequenceProps) {
   return (
     <div className="intro-root fixed inset-0 z-50 bg-black">
       <Canvas
-        camera={{ fov: 38, near: 0.05, far: 500, position: [0, 0.3, 3.2] }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{
+          fov: 38,
+          near: 0.1,
+          far: 500000,
+          position: [0, 18, 230],
+        }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.35,
+        }}
+        onCreated={onCanvasCreated}
         dpr={[1, 2]}
       >
         <Suspense fallback={null}>

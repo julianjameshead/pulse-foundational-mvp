@@ -2,6 +2,7 @@
 
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 
+/** Matches pulse.html UnrealBloomPass settings */
 export function IntroBloom() {
   return (
     <EffectComposer multisampling={0}>

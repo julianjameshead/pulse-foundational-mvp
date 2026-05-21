@@ -10,8 +10,6 @@ interface PlanetMeshProps {
   radius: number;
   position: [number, number, number];
   rotationSpeed?: number;
-  emissive?: string;
-  emissiveIntensity?: number;
   rings?: boolean;
 }
 
@@ -19,9 +17,7 @@ export function PlanetMesh({
   textureUrl,
   radius,
   position,
-  rotationSpeed = 0.05,
-  emissive,
-  emissiveIntensity = 0,
+  rotationSpeed = 0.003,
   rings = false,
 }: PlanetMeshProps) {
   const ref = useRef<THREE.Mesh>(null);
@@ -35,21 +31,20 @@ export function PlanetMesh({
     <group position={position}>
       <mesh ref={ref}>
         <sphereGeometry args={[radius, 64, 64]} />
-        <meshStandardMaterial
+        <meshPhongMaterial
           map={map}
-          roughness={0.85}
-          metalness={0.05}
-          emissive={emissive ? new THREE.Color(emissive) : undefined}
-          emissiveIntensity={emissiveIntensity}
+          shininess={8}
+          specular={0x333333}
+          color={0xffffff}
         />
       </mesh>
       {rings && (
         <mesh rotation={[Math.PI / 2.2, 0, 0]}>
-          <ringGeometry args={[radius * 1.35, radius * 2.1, 128]} />
+          <ringGeometry args={[radius * 1.35, radius * 2.4, 128]} />
           <meshBasicMaterial
-            color="#c9b896"
+            color="#e8dcc0"
             transparent
-            opacity={0.55}
+            opacity={0.82}
             side={THREE.DoubleSide}
             depthWrite={false}
           />
