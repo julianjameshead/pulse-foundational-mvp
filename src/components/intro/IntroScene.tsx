@@ -8,13 +8,15 @@ import {
   getSolarSystemOpacity,
   introTime,
 } from "@/lib/introCinematic";
-import { INTRO_PLANETS, OUTER_PLANET_X } from "@/lib/introPlanets";
+import { INTRO_PLANETS } from "@/lib/introPlanets";
 import { IntroBloom } from "./IntroBloom";
 import { IntroEarth } from "./IntroEarth";
 import { IntroLighting } from "./IntroLighting";
 import { IntroPlanet } from "./IntroPlanet";
 import { IntroSkybox } from "./IntroSkybox";
+import { IntroStarfield } from "./IntroStarfield";
 import { IntroSun } from "./IntroSun";
+import { IntroWarp } from "./IntroWarp";
 
 interface IntroSceneProps {
   progress: number;
@@ -27,7 +29,7 @@ export function IntroScene({ progress }: IntroSceneProps) {
   const sysOpacity = getSolarSystemOpacity(progress);
 
   useFrame(() => {
-    const { position, lookAt, fov } = getIntroCamera(elapsed, OUTER_PLANET_X);
+    const { position, lookAt, fov } = getIntroCamera(progress);
     camera.position.copy(position);
     camera.lookAt(lookAt);
     if (camera instanceof THREE.PerspectiveCamera) {
@@ -36,15 +38,19 @@ export function IntroScene({ progress }: IntroSceneProps) {
     }
   });
 
+  const skyOpacity = overlays.showSky
+    ? overlays.showDeepSpace
+      ? 1
+      : 0.55 + progress * 0.25
+    : 0;
+
   return (
     <>
       <color attach="background" args={["#000005"]} />
       <IntroLighting />
 
-      <IntroSkybox
-        opacity={overlays.showSky ? (overlays.showDeepSpace ? 1 : 0.65) : 0}
-        deep={overlays.showDeepSpace}
-      />
+      <IntroStarfield />
+      <IntroSkybox opacity={skyOpacity} deep={overlays.showDeepSpace} />
 
       <group visible={sysOpacity > 0.02}>
         <IntroSun elapsed={elapsed} />
@@ -54,6 +60,7 @@ export function IntroScene({ progress }: IntroSceneProps) {
         ))}
       </group>
 
+      <IntroWarp intensity={overlays.warp} />
       <IntroBloom />
     </>
   );

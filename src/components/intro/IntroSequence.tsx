@@ -1,44 +1,127 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
+import { useTexture } from "@react-three/drei";
+import { Great_Vibes } from "next/font/google";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { usePulseAudio } from "@/hooks/usePulseAudio";
+import {
+  getFadeOpacity,
+  getIntroOverlays,
+  INTRO_DURATION_MS,
+  introTime,
+} from "@/lib/introCinematic";
+import { PLANET_TEXTURES } from "@/lib/planetTextures";
+import { IntroScene } from "./IntroScene";
+
+const greatVibes = Great_Vibes({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 interface IntroSequenceProps {
   onComplete: () => void;
 }
 
-/**
- * Uses the author's pulse.html cinematic directly — same Earth shader, stars,
- * nebulas, bloom, and camera path. Embedded via iframe for visual parity.
- */
 export function IntroSequence({ onComplete }: IntroSequenceProps) {
-  const finished = useRef(false);
+  const [progress, setProgress] = useState(0);
+  const { playHeartbeat, stop } = usePulseAudio();
+  const startedAudio = useRef(false);
 
-  const finish = useCallback(() => {
-    if (finished.current) return;
-    finished.current = true;
-    onComplete();
-  }, [onComplete]);
+  const elapsed = introTime(progress);
+  const { pulseOpacity, warp } = getIntroOverlays(elapsed);
+  const fadeOpacity = getFadeOpacity(elapsed);
+  const textBreath = 0.9 + Math.sin(elapsed * 1.2) * 0.1;
 
   useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === "pulse-intro-complete") finish();
+    Object.values(PLANET_TEXTURES).forEach((url) => useTexture.preload(url));
+  }, []);
+
+  const onCanvasCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.toneMappingExposure = 1.4;
+    gl.outputColorSpace = THREE.SRGBColorSpace;
+  }, []);
+
+  const finish = useCallback(() => {
+    stop();
+    onComplete();
+  }, [onComplete, stop]);
+
+  const skip = useCallback(() => finish(), [finish]);
+
+  useEffect(() => {
+    if (!startedAudio.current) {
+      startedAudio.current = true;
+      playHeartbeat();
+      const t = setTimeout(stop, 500);
+      return () => clearTimeout(t);
+    }
+  }, [playHeartbeat, stop]);
+
+  useEffect(() => {
+    const start = performance.now();
+    let frame: number;
+
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / INTRO_DURATION_MS);
+      setProgress(p);
+      if (p >= 1) finish();
+      else frame = requestAnimationFrame(tick);
     };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
   }, [finish]);
 
   return (
     <div className="intro-root fixed inset-0 z-50 bg-black">
-      <iframe
-        title="Pulse intro"
-        src="/intro/cinematic.html"
-        className="h-full w-full border-0"
-        allow="autoplay"
+      <Canvas
+        camera={{
+          fov: 40,
+          near: 0.1,
+          far: 500000,
+          position: [0, 14, 198],
+        }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.4,
+        }}
+        onCreated={onCanvasCreated}
+        dpr={[1, 2]}
+      >
+        <Suspense fallback={null}>
+          <IntroScene progress={progress} />
+        </Suspense>
+      </Canvas>
+
+      <div
+        className="intro-fade pointer-events-none fixed inset-0 z-20 bg-black"
+        style={{ opacity: fadeOpacity }}
       />
+
+      <div className="intro-vig pointer-events-none fixed inset-0 z-10" />
+
+      <div
+        className="intro-warp-overlay pointer-events-none fixed inset-0 z-[12]"
+        style={{ opacity: warp * 0.55 }}
+      />
+
+      <div
+        className="intro-pulse-text pointer-events-none fixed inset-0 z-[15] flex items-center justify-center"
+        style={{ opacity: pulseOpacity * textBreath }}
+      >
+        <span className={greatVibes.className}>Pulse</span>
+      </div>
 
       <button
         type="button"
-        onClick={finish}
+        onClick={skip}
         className="absolute right-5 top-5 z-30 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-white/60 backdrop-blur-md transition hover:bg-white/10 hover:text-white/90"
       >
         Skip
