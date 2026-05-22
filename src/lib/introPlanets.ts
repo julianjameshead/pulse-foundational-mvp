@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { PLANET_TEXTURES } from "@/lib/planetTextures";
-import { SUN_POS } from "@/lib/introCinematic";
+import { SUN_POS } from "@/lib/introConstants";
 
 export interface IntroPlanetConfig {
   name: string;

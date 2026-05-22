@@ -1,10 +1,8 @@
 import * as THREE from "three";
+import { EARTH_POS } from "@/lib/introConstants";
 import { INTRO_PLANETS, planetWorldPosition } from "@/lib/introPlanets";
 
-export const EARTH_POS = new THREE.Vector3(0, 0, 0);
-export const EARTH_R = 50;
-export const SUN_POS = new THREE.Vector3(-4800, 0, 0);
-export const SUN_R = 220;
+export { EARTH_POS, EARTH_R, SUN_POS, SUN_R } from "@/lib/introConstants";
 
 /** YouTube-style Earth → galaxy pullout, compressed to 5s (vid: OCpvAOioKto) */
 export const INTRO_DURATION_SEC = 5;
