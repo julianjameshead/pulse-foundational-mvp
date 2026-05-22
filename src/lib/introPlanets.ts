@@ -10,7 +10,6 @@ export interface IntroPlanetConfig {
   dist: number;
   ang: number;
   tilt?: number;
-  rings?: boolean;
   color?: string;
 }
 
@@ -19,7 +18,7 @@ export const INTRO_PLANETS: IntroPlanetConfig[] = [
   { name: "Venus", procedural: true, size: 22, dist: 720, ang: 1.8, tilt: 3.1 },
   { name: "Mars", texture: PLANET_TEXTURES.mars, size: 18, dist: 1250, ang: 0.6, tilt: 0.44 },
   { name: "Jupiter", texture: PLANET_TEXTURES.jupiter, size: 95, dist: 1900, ang: -0.3, tilt: 0.05 },
-  { name: "Saturn", texture: PLANET_TEXTURES.saturn, size: 82, dist: 2700, ang: 0.9, tilt: 0.47, rings: true },
+  { name: "Saturn", texture: PLANET_TEXTURES.saturn, size: 82, dist: 2700, ang: 0.9, tilt: 0.47 },
   { name: "Uranus", texture: PLANET_TEXTURES.uranus, size: 48, dist: 3500, ang: -1.2, tilt: 1.7 },
   { name: "Neptune", texture: PLANET_TEXTURES.neptune, size: 46, dist: 4200, ang: 0.2, tilt: 0.49 },
 ];

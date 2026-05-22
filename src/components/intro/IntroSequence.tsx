@@ -56,7 +56,7 @@ export function IntroSequence({ onComplete }: IntroSequenceProps) {
     if (!startedAudio.current) {
       startedAudio.current = true;
       playHeartbeat();
-      const t = setTimeout(stop, 900);
+      const t = setTimeout(stop, 650);
       return () => clearTimeout(t);
     }
   }, [playHeartbeat, stop]);

@@ -31,7 +31,6 @@ export function IntroPlanet({ config }: IntroPlanetProps) {
         textureUrl={config.texture}
         radius={config.size}
         position={[pos.x, pos.y, pos.z]}
-        rings={config.rings}
       />
     );
   }

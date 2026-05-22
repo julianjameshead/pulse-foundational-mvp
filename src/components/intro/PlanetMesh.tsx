@@ -10,7 +10,6 @@ interface PlanetMeshProps {
   radius: number;
   position: [number, number, number];
   rotationSpeed?: number;
-  rings?: boolean;
 }
 
 export function PlanetMesh({
@@ -18,7 +17,6 @@ export function PlanetMesh({
   radius,
   position,
   rotationSpeed = 0.003,
-  rings = false,
 }: PlanetMeshProps) {
   const ref = useRef<THREE.Mesh>(null);
   const map = useTexture(textureUrl);
@@ -38,18 +36,6 @@ export function PlanetMesh({
           color={0xffffff}
         />
       </mesh>
-      {rings && (
-        <mesh rotation={[Math.PI / 2.2, 0, 0]}>
-          <ringGeometry args={[radius * 1.35, radius * 2.4, 128]} />
-          <meshBasicMaterial
-            color="#e8dcc0"
-            transparent
-            opacity={0.82}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
     </group>
   );
 }

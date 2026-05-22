@@ -5,18 +5,16 @@ import * as THREE from "three";
 import {
   getIntroCamera,
   getIntroOverlays,
+  getSolarSystemOpacity,
   introTime,
 } from "@/lib/introCinematic";
 import { INTRO_PLANETS, OUTER_PLANET_X } from "@/lib/introPlanets";
 import { IntroBloom } from "./IntroBloom";
 import { IntroEarth } from "./IntroEarth";
-import { IntroGalaxy } from "./IntroGalaxy";
 import { IntroLighting } from "./IntroLighting";
-import { IntroNebulas } from "./IntroNebulas";
 import { IntroPlanet } from "./IntroPlanet";
-import { IntroStarfield } from "./IntroStarfield";
+import { IntroSkybox } from "./IntroSkybox";
 import { IntroSun } from "./IntroSun";
-import { PulseRings } from "./PulseRings";
 
 interface IntroSceneProps {
   progress: number;
@@ -26,6 +24,7 @@ export function IntroScene({ progress }: IntroSceneProps) {
   const { camera } = useThree();
   const elapsed = introTime(progress);
   const overlays = getIntroOverlays(elapsed);
+  const sysOpacity = getSolarSystemOpacity(progress);
 
   useFrame(() => {
     const { position, lookAt, fov } = getIntroCamera(elapsed, OUTER_PLANET_X);
@@ -39,25 +38,21 @@ export function IntroScene({ progress }: IntroSceneProps) {
 
   return (
     <>
-      <color attach="background" args={["#000000"]} />
+      <color attach="background" args={["#000005"]} />
       <IntroLighting />
 
-      <IntroStarfield />
-      <IntroNebulas />
-      <IntroGalaxy visible={overlays.showGalaxy} />
-
-      <IntroSun elapsed={elapsed} />
-      <IntroEarth elapsed={elapsed} earthPulse={overlays.earthPulse} />
-
-      {INTRO_PLANETS.map((p) => (
-        <IntroPlanet key={p.name} config={p} />
-      ))}
-
-      <PulseRings
-        elapsed={elapsed}
-        ringFade={overlays.ringFade}
-        ringActive={overlays.ringActive}
+      <IntroSkybox
+        opacity={overlays.showSky ? (overlays.showDeepSpace ? 1 : 0.65) : 0}
+        deep={overlays.showDeepSpace}
       />
+
+      <group visible={sysOpacity > 0.02}>
+        <IntroSun elapsed={elapsed} />
+        <IntroEarth elapsed={elapsed} earthPulse={overlays.earthPulse} />
+        {INTRO_PLANETS.map((p) => (
+          <IntroPlanet key={p.name} config={p} />
+        ))}
+      </group>
 
       <IntroBloom />
     </>
