@@ -37,6 +37,8 @@ export function IntroSequence({ onComplete }: IntroSequenceProps) {
 
   useEffect(() => {
     Object.values(PLANET_TEXTURES).forEach((url) => useTexture.preload(url));
+    useTexture.preload("/intro/stars_milky_way_2k.jpg");
+    useTexture.preload("/intro/stars_2k.jpg");
   }, []);
 
   const onCanvasCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
